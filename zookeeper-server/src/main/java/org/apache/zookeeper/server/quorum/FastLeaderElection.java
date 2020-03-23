@@ -217,6 +217,7 @@ public class FastLeaderElection implements Election {
                 this.manager = manager;
             }
 
+            @Override
             public void run() {
 
                 Message response;
@@ -224,7 +225,7 @@ public class FastLeaderElection implements Election {
                     // Sleeps on receive
                     try {
                         response = manager.pollRecvQueue(3000, TimeUnit.MILLISECONDS);
-                        if(response == null) continue;
+                        if(response == null) {continue;}
 
                         // The current protocol and two previous generations all send at least 28 bytes
                         if (response.buffer.capacity() < 28) {
@@ -447,11 +448,14 @@ public class FastLeaderElection implements Election {
                 this.manager = manager;
             }
 
+            @Override
             public void run() {
                 while (!stop) {
                     try {
                         ToSend m = sendqueue.poll(3000, TimeUnit.MILLISECONDS);
-                        if(m == null) continue;
+                        if(m == null) {
+                            continue;
+                        }
 
                         process(m);
                     } catch (InterruptedException e) {
@@ -652,6 +656,7 @@ public class FastLeaderElection implements Election {
     }
 
     volatile boolean stop;
+    @Override
     public void shutdown(){
         stop = true;
         proposedLeader = -1;
@@ -704,8 +709,8 @@ public class FastLeaderElection implements Election {
      * Check if a pair (server id, zxid) succeeds our
      * current vote.
      *
-     * @param id    Server identifier
-     * @param zxid  Last zxid observed by the issuer of this vote
+     * //@param id    Server identifier
+     * //@param zxid  Last zxid observed by the issuer of this vote
      */
     protected boolean totalOrderPredicate(long newId, long newZxid, long newEpoch, long curId, long curZxid, long curEpoch) {
         LOG.debug("id: " + newId + ", proposed id: " + curId + ", zxid: 0x" +
@@ -784,8 +789,8 @@ public class FastLeaderElection implements Election {
          */
 
         if(leader != self.getId()){
-            if(votes.get(leader) == null) predicate = false;
-            else if(votes.get(leader).getState() != ServerState.LEADING) predicate = false;
+            if(votes.get(leader) == null){ predicate = false;}
+            else if(votes.get(leader).getState() != ServerState.LEADING) {predicate = false;}
         } else if(logicalclock.get() != electionEpoch) {
             predicate = false;
         }
@@ -833,8 +838,8 @@ public class FastLeaderElection implements Election {
      */
     private long getInitId(){
         if(self.getQuorumVerifier().getVotingMembers().containsKey(self.getId()))       
-            return self.getId();
-        else return Long.MIN_VALUE;
+            {return self.getId();}
+        else {return Long.MIN_VALUE;}
     }
 
     /**
@@ -844,8 +849,8 @@ public class FastLeaderElection implements Election {
      */
     private long getInitLastLoggedZxid(){
         if(self.getLearnerType() == LearnerType.PARTICIPANT)
-            return self.getLastLoggedZxid();
-        else return Long.MIN_VALUE;
+           {return self.getLastLoggedZxid();}
+        else {return Long.MIN_VALUE;}
     }
 
     /**
@@ -854,15 +859,16 @@ public class FastLeaderElection implements Election {
      * @return long
      */
     private long getPeerEpoch(){
-        if(self.getLearnerType() == LearnerType.PARTICIPANT)
-        	try {
+        if(self.getLearnerType() == LearnerType.PARTICIPANT){
+        	    try {
         		return self.getCurrentEpoch();
         	} catch(IOException e) {
         		RuntimeException re = new RuntimeException(e.getMessage());
         		re.setStackTrace(e.getStackTrace());
         		throw re;
         	}
-        else return Long.MIN_VALUE;
+        }
+        else {return Long.MIN_VALUE;}
     }
 
     /**
@@ -871,6 +877,7 @@ public class FastLeaderElection implements Election {
      * sends notifications to all other peers.
      * 真正的投票逻辑
      */
+    @Override
     public Vote lookForLeader() throws InterruptedException {
         try {
             self.jmxLeaderElectionBean = new LeaderElectionBean();
